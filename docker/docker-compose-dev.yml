@@ -1,0 +1,32 @@
+version: '3.4'
+
+services:
+  db:
+    image: postgres
+    env_file:
+      - environment/dev/postgres.env
+    ports:
+      - ${POSTGRES_PUBLIC_PORT}:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./databasesInit/postgres/dev:/docker-entrypoint-initdb.d:ro      
+
+  http:
+    build:
+      context: ../
+      dockerfile: docker/http/Dockerfile
+      args:
+        APP_ENV: ${APP_ENV}
+    env_file:
+      - environment/global.env    
+      - environment/dev/http.env
+    # command: gunicorn --bind 0.0.0.0:5000 wsgi:run_app
+    command : flask run -h 0.0.0.0 -p 5000
+    # command: tail -f /dev/null
+    volumes:
+      - ../api/:/usr/src/app
+    ports:
+      - 5000:5000
+
+volumes:
+  pgdata:
